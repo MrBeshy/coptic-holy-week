@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coptic Orthodox Holy Week</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- REPLACE: swap for self-hosted fonts if internet access cannot be guaranteed -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; font-size: 18px; }
+
+    body {
+      font-family: 'Cormorant Garamond', 'Georgia', serif;
+      color: #f5edd6;
+      overflow-x: hidden;
+      line-height: 1.8;
+    }
+
+    /* ============================================================
+       FIXED BACKGROUND LAYERS
+    ============================================================ */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse at 50% 40%, rgba(160,110,20,0.30) 0%, transparent 60%),
+        linear-gradient(160deg, rgb(18,10,0) 0%, rgb(10,6,0) 100%);
+    }
+
+    #stars-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.8s ease;
+      background-image:
+        radial-gradient(1.2px 1.2px at 12% 18%, rgba(210,220,255,0.60) 0%, transparent 100%),
+        radial-gradient(1px   1px   at 38%  8%, rgba(210,220,255,0.45) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 62% 25%, rgba(210,220,255,0.55) 0%, transparent 100%),
+        radial-gradient(1px   1px   at 82% 12%, rgba(210,220,255,0.40) 0%, transparent 100%),
+        radial-gradient(1px   1px   at 22% 52%, rgba(210,220,255,0.35) 0%, transparent 100%),
+        radial-gradient(1.2px 1.2px at 50% 42%, rgba(210,220,255,0.50) 0%, transparent 100%),
+        radial-gradient(1px   1px   at 74% 58%, rgba(210,220,255,0.38) 0%, transparent 100%),
+        radial-gradient(1px   1px   at  6% 76%, rgba(210,220,255,0.32) 0%, transparent 100%),
+        radial-gradient(1.3px 1.3px at 88% 82%, rgba(210,220,255,0.45) 0%, transparent 100%),
+        radial-gradient(1px   1px   at 46% 88%, rgba(210,220,255,0.33) 0%, transparent 100%),
+        radial-gradient(1px   1px   at 30% 70%, rgba(210,220,255,0.28) 0%, transparent 100%),
+        radial-gradient(1.2px 1.2px at 92% 35%, rgba(210,220,255,0.42) 0%, transparent 100%),
+        radial-gradient(1px   1px   at 17% 93%, rgba(210,220,255,0.30) 0%, transparent 100%),
+        radial-gradient(1px   1px   at 67% 72%, rgba(210,220,255,0.36) 0%, transparent 100%),
+        radial-gradient(1.4px 1.4px at 55% 15%, rgba(210,220,255,0.48) 0%, transparent 100%);
+    }
+
+    .page-content { position: relative; z-index: 2; }
+
+    /* ============================================================
+       PROGRESS BAR & NAV DOTS
+    ============================================================ */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 2px;
+      background: linear-gradient(90deg, #d4af37, #f5d76e);
+      z-index: 200; width: 0%;
+    }
+
+    .nav-dots {
+      position: fixed; right: 1.4rem; top: 50%;
+      transform: translateY(-50%);
+      z-index: 100; display: flex; flex-direction: column; gap: 0.75rem;
+    }
+
+    .nav-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(212,175,55,0.3);
+      border: 1px solid rgba(212,175,55,0.55);
+      cursor: pointer;
+      transition: background 0.4s, transform 0.3s;
+    }
+
+    .nav-dot.active { background: #d4af37; transform: scale(1.4); }
+
+    /* ============================================================
+       SECTIONS
+    ============================================================ */
+    .section {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 7rem 2rem 5rem;
+    }
+
+    .section-inner { max-width: 760px; width: 100%; }
+
+    .section-header { text-align: center; margin-bottom: 2.2rem; }
+
+    .ornament {
+      font-size: 1.3rem; color: #d4af37;
+      letter-spacing: 0.45em; opacity: 0.75; margin-bottom: 0.9rem;
+    }
+
+    .day-label {
+      font-family: 'IM Fell English', 'Georgia', serif;
+      font-size: clamp(2.6rem, 7vw, 4.4rem);
+      font-weight: 400; letter-spacing: 0.05em; line-height: 1.1;
+      color: #d4af37;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+      margin-bottom: 0.3rem;
+    }
+
+    .day-subtitle {
+      font-style: italic; font-size: 0.9rem;
+      letter-spacing: 0.18em; color: rgba(212,175,55,0.65);
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Coptic / liturgical name sits below the English subtitle, smaller */
+    .day-subtitle-coptic {
+      display: block;
+      font-style: normal;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      color: rgba(212,175,55,0.42);
+      text-transform: none;
+      margin-top: 0.2rem;
+    }
+
+    /* ============================================================
+       PARCHMENT SCROLL
+    ============================================================ */
+    .scroll {
+      position: relative;
+      filter: drop-shadow(0 10px 40px rgba(0,0,0,0.75));
+    }
+
+    .scroll-roll {
+      height: 24px;
+      background: linear-gradient(to right,
+        #3e2208 0%, #6e3e14 7%, #a86624 16%, #cc9040 28%,
+        #e2b85c 42%, #ecc86a 50%,
+        #e2b85c 58%, #cc9040 72%, #a86624 84%, #6e3e14 93%, #3e2208 100%
+      );
+      border-radius: 12px; position: relative; z-index: 2;
+    }
+
+    .scroll-roll-top {
+      box-shadow:
+        0 6px 16px rgba(0,0,0,0.55),
+        inset 0 3px 5px rgba(255,255,255,0.14),
+        inset 0 -3px 5px rgba(0,0,0,0.22);
+      margin-bottom: -5px;
+    }
+
+    .scroll-roll-bottom {
+      box-shadow:
+        0 -4px 14px rgba(0,0,0,0.45),
+        inset 0 3px 5px rgba(255,255,255,0.1),
+        inset 0 -3px 6px rgba(0,0,0,0.28);
+      margin-top: -5px;
+    }
+
+    .scroll-body {
+      background: linear-gradient(to right,
+        #a87040 0%, #c89860 5%, #e8c888 11%, #f5e0b0 18%,
+        #fbf0d0 28%, #fef8e8 50%,
+        #fbf0d0 72%, #f5e0b0 82%, #e8c888 89%, #c89860 95%, #a87040 100%
+      );
+      padding: 2.8rem 3.6rem;
+      position: relative; overflow: hidden;
+      box-shadow:
+        inset  6px 0 18px rgba(80,40,0,0.18),
+        inset -6px 0 18px rgba(80,40,0,0.18);
+    }
+
+    .scroll-body::before {
+      content: ''; position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        180deg, transparent, transparent 28px,
+        rgba(100,60,10,0.025) 28px, rgba(100,60,10,0.025) 29px
+      );
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       TYPOGRAPHY INSIDE THE SCROLL
+    ============================================================ */
+    .scroll-body p {
+      font-size: 1.08rem; line-height: 1.88;
+      color: #28120a; text-shadow: none;
+      text-align: left; margin-bottom: 1.3rem;
+    }
+
+    .scroll-body p:last-child { margin-bottom: 0; }
+
+    .scroll-body .drop-cap::first-letter {
+      font-family: 'IM Fell English', Georgia, serif;
+      font-size: 4.4rem; float: left;
+      line-height: 0.72; margin-right: 0.1em; margin-top: 0.08em;
+      color: #7a4800;
+    }
+
+    .scroll-body .scroll-heading {
+      font-family: 'IM Fell English', Georgia, serif;
+      font-size: 1.12rem; font-weight: 400;
+      color: #4a2400; letter-spacing: 0.08em; margin-bottom: 0.7rem;
+    }
+
+    .scroll-body .gold-divider {
+      border: none;
+      border-top: 1px solid rgba(110,65,10,0.3);
+      margin: 1.8rem 0;
+    }
+
+    /* ============================================================
+       READING LIST
+    ============================================================ */
+    .scroll-body .reading-list {
+      list-style: none; padding: 0;
+      margin: 0.4rem 0 1.3rem 0.2rem;
+    }
+
+    .scroll-body .reading-list li {
+      padding: 0.32rem 0 0.32rem 1.6rem;
+      position: relative; font-style: italic;
+      font-size: 0.98rem; color: #3a1e08; line-height: 1.65;
+    }
+
+    .scroll-body .reading-list li::before {
+      content: '\2726'; position: absolute; left: 0;
+      color: #8b5e14; font-style: normal;
+      font-size: 0.65rem; top: 0.62rem;
+    }
+
+    /* ============================================================
+       STOLE MOMENT CALLOUT
+    ============================================================ */
+    .scroll-body .stole-moment {
+      border: 1px solid rgba(110,65,10,0.4);
+      border-left: 4px solid #8b5e14;
+      background: rgba(100,55,5,0.07);
+      padding: 1.3rem 1.5rem; margin: 1.8rem 0;
+      font-style: italic; text-align: center;
+      font-size: 1.04rem; color: #28120a;
+      letter-spacing: 0.02em; line-height: 1.8;
+    }
+
+    .scroll-body .stole-moment strong {
+      display: block;
+      font-family: 'IM Fell English', Georgia, serif;
+      font-size: 1.15rem; font-style: normal;
+      color: #4a2400; margin-bottom: 0.6rem; letter-spacing: 0.07em;
+    }
+
+    .scroll-body .stole-moment.stole-light {
+      border-left-color: #c89820;
+      background: rgba(180,130,10,0.08);
+    }
+
+    .scroll-body .stole-moment.stole-light strong { color: #5a3600; }
+
+    /* ============================================================
+       THOK TE TEGOM CALLOUT
+    ============================================================ */
+    .scroll-body .thok-box {
+      border: 1px solid rgba(110,20,20,0.35);
+      border-top: 3px solid #7a1010;
+      background: rgba(80,10,10,0.05);
+      padding: 1.7rem 1.3rem 1.4rem; margin: 2rem 0;
+    }
+
+    .scroll-body .thok-title {
+      font-family: 'IM Fell English', Georgia, serif;
+      font-size: 1.3rem; color: #4a2400;
+      text-align: center; letter-spacing: 0.1em; margin-bottom: 0.2rem;
+    }
+
+    .scroll-body .thok-subtitle {
+      text-align: center; font-style: italic;
+      font-size: 0.8rem; color: rgba(74,36,0,0.6);
+      letter-spacing: 0.13em; text-transform: uppercase; margin-bottom: 1.2rem;
+    }
+
+    .thok-columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+    .thok-col {
+      padding: 0.75rem; background: rgba(0,0,0,0.04);
+      border: 1px solid rgba(110,65,10,0.18);
+    }
+
+    .thok-col-heading {
+      font-size: 0.68rem; text-transform: uppercase;
+      letter-spacing: 0.2em; color: rgba(74,36,0,0.6);
+      margin-bottom: 0.55rem; text-align: center;
+    }
+
+    .thok-col p {
+      font-size: 0.88rem; text-align: center;
+      font-style: italic; color: #3a1e08;
+      margin-bottom: 0.75rem;
+    }
+
+    .thok-col p:last-child { margin-bottom: 0; }
+
+    /* Coptic script column — larger, upright */
+    .thok-col-coptic p {
+      font-size: 0.95rem;
+      font-style: normal;
+      line-height: 1.75;
+    }
+
+    /* Small label before a conditional addition */
+    .scroll-body p.thok-note {
+      font-size: 0.63rem;
+      font-style: normal;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(74,36,0,0.42);
+      margin-top: 0.9rem;
+      margin-bottom: 0.15rem;
+      border-top: 1px solid rgba(110,65,10,0.15);
+      padding-top: 0.65rem;
+    }
+
+    /* ============================================================
+       SCRIPTURE PULLQUOTE
+    ============================================================ */
+    .scroll-body .scripture-quote {
+      font-style: italic; text-align: center;
+      font-size: 1.08rem; color: #3a1e08;
+      padding: 0.8rem 1rem; line-height: 1.9;
+    }
+
+    .scroll-body .scripture-source {
+      display: block; font-size: 0.78rem;
+      letter-spacing: 0.14em; color: rgba(58,30,8,0.6);
+      margin-top: 0.5rem; font-style: normal; text-transform: uppercase;
+    }
+
+    .scroll-body .acclamation {
+      text-align: center;
+      font-family: 'IM Fell English', Georgia, serif;
+      font-size: 1.25rem; color: #4a2400;
+      letter-spacing: 0.08em; padding-top: 0.5rem;
+    }
+
+    /* ============================================================
+       SCROLL-REVEAL ANIMATION
+    ============================================================ */
+    .reveal {
+      opacity: 0; transform: translateY(22px);
+      transition: opacity 0.9s ease, transform 0.9s ease;
+    }
+
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    .section-header .ornament     { transition-delay: 0s; }
+    .section-header .day-label    { transition-delay: 0.12s; }
+    .section-header .day-subtitle { transition-delay: 0.22s; }
+    .scroll.reveal                { transition-delay: 0.34s; }
+
+    @media (max-width: 600px) {
+      .thok-columns { grid-template-columns: 1fr; }
+      .scroll-body  { padding: 2rem 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="bg-canvas"></div>
+  <div id="stars-overlay"></div>
+
+  <div class="progress-bar" id="progressBar"></div>
+
+  <nav class="nav-dots" aria-label="Section navigation">
+    <div class="nav-dot active" data-section="0" title="Holy Week"></div>
+    <div class="nav-dot" data-section="1" title="Palm Sunday"></div>
+    <div class="nav-dot" data-section="2" title="Covenant Thursday"></div>
+    <div class="nav-dot" data-section="3" title="Good Friday"></div>
+    <div class="nav-dot" data-section="4" title="Bright Saturday"></div>
+    <div class="nav-dot" data-section="5" title="Resurrection Sunday"></div>
+  </nav>
+
+  <div class="page-content">
+
+    <!-- ============================================================
+         SECTION 0 — HOLY WEEK INTRODUCTION
+    ============================================================ -->
+    <section class="section" id="holy-week">
+      <div class="section-inner">
+
+        <div class="section-header">
+          <div class="ornament reveal">&#x2726; &nbsp; &#x2726; &nbsp; &#x2726;</div>
+          <h1 class="day-label reveal">Holy Week</h1>
+          <p class="day-subtitle reveal">The Great Pascha
+            <!-- REPLACE with Coptic name for Holy Week used in your parish -->
+            <span class="day-subtitle-coptic">Pi`pasxa Ethouwab</span>
+          </p>
+        </div>
+
+        <div class="scroll reveal">
+          <div class="scroll-roll scroll-roll-top"></div>
+          <div class="scroll-body">
+
+            <p class="drop-cap">
+              Holy Week in the Coptic Orthodox Church is the most solemn period of the
+              liturgical year. Each day carries specific rites, readings, and prayers. The
+              faithful are expected to attend services, fast strictly, and enter fully into
+              the commemorations of the Passion, death, and resurrection of Christ.
+            </p>
+
+            <hr class="gold-divider" />
+
+            <p class="scroll-heading">The Musical Shift</p>
+
+            <p>
+              On Palm Sunday, the Divine Liturgy is sung in the festive tunes of the great
+              feasts. These bright, expansive melodies are the same ones heard at Christmas,
+              Epiphany, and the major saints' days throughout the year.
+            </p>
+
+            <p>
+              When the Palm Sunday liturgy ends, those tunes stop. Every service from Sunday
+              evening through Bright Saturday is chanted exclusively in the mournful tunes of
+              the sorrowful season. The Coptic liturgical tradition has two distinct musical
+              registers for these seasons, and the shift between them is immediate and
+              unmistakable. Before a word about mourning is spoken, the congregation hears it.
+            </p>
+
+            <hr class="gold-divider" />
+
+            <p class="scroll-heading">The Fast</p>
+
+            <p>
+              The fast of Holy Week is among the strictest in the Coptic tradition. Many
+              faithful abstain from all food and water from midnight through the end of each
+              day's services, with Good Friday observed as a complete fast until the ninth
+              hour. The fast is not merely discipline; it is participation. The body joins
+              the mourning of the week alongside the prayers and the chanting.
+            </p>
+
+            <p>
+              At midnight on Resurrection Sunday the mournful tunes cease and the festive
+              melodies return without transition. The Church does not ease into the
+              resurrection; the announcement breaks the silence and the bright tunes
+              follow immediately. The contrast with the preceding week is intentional
+              and complete.
+            </p>
+
+            <!-- REPLACE: add any additional Holy Week customs or practices from your parish -->
+
+          </div>
+          <div class="scroll-roll scroll-roll-bottom"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 1 — PALM SUNDAY
+    ============================================================ -->
+    <section class="section" id="palm-sunday">
+      <div class="section-inner">
+
+        <div class="section-header">
+          <div class="ornament reveal">&#x2726; &nbsp; &#x2726; &nbsp; &#x2726;</div>
+          <h1 class="day-label reveal">Palm Sunday</h1>
+          <p class="day-subtitle reveal">Sunday of Hosanna
+            <!-- REPLACE with Coptic liturgical name for Palm Sunday used in your parish -->
+            <span class="day-subtitle-coptic">Ni`ehoou `nte pi`esmo</span>
+          </p>
+        </div>
+
+        <div class="scroll reveal">
+          <div class="scroll-roll scroll-roll-top"></div>
+          <div class="scroll-body">
+
+            <p class="drop-cap">
+              Palm Sunday commemorates the triumphal entry of Christ into Jerusalem.
+              The faithful gather bearing palm branches, olive branches, and green reeds.
+              During the service they weave the palms into small crosses, a practice
+              observed across Coptic communities worldwide. The deacons vest in red stoles,
+              the colour of feasts and royal celebration.
+            </p>
+
+            <hr class="gold-divider" />
+
+            <p class="scroll-heading">The Four Gospel Accounts</p>
+
+            <p style="font-style:italic;font-size:0.96rem;color:#3a1e08;">
+              A distinctive feature of the Coptic Palm Sunday liturgy is that all four
+              Gospel accounts of the entry into Jerusalem are read aloud in sequence:
+            </p>
+
+            <ul class="reading-list">
+              <li>Matthew 21:1&ndash;17, <em>"Hosanna to the Son of David!"</em></li>
+              <li>Mark 11:1&ndash;11, <em>"Blessed is the kingdom of our father David."</em></li>
+              <li>Luke 19:28&ndash;44, <em>"If these were silent, the very stones would cry out."</em></li>
+              <li>John 12:12&ndash;19, <em>"Fear not, daughter of Zion; behold, your King is coming."</em></li>
+              <!-- REPLACE: verify the exact lectionary references used in your parish -->
+            </ul>
+
+            <p>
+              After each reading the congregation chants the <em>Hosanna</em> responses,
+              the festal hymns particular to this Sunday. The liturgy is celebrated in full
+              festive mode. This is the last feast music the congregation will hear until
+              midnight the following Sunday.
+            </p>
+
+            <hr class="gold-divider" />
+
+            <div class="stole-moment">
+              <strong>The Turning of the Stoles</strong>
+              After the Palm Sunday liturgy concludes, the deacons remove their red stoles
+              and replace them with black before the congregation departs. This is the
+              formal beginning of Holy Week mourning. From this moment through Holy
+              Saturday, all clergy and deacons serving at the altar will wear black.
+              The festive tunes have ended. The sorrowful season has begun.
+            </div>
+
+          </div>
+          <div class="scroll-roll scroll-roll-bottom"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2 — COVENANT THURSDAY
+    ============================================================ -->
+    <section class="section" id="covenant-thursday">
+      <div class="section-inner">
+
+        <div class="section-header">
+          <div class="ornament reveal">&#x2726; &nbsp; &#x2726; &nbsp; &#x2726;</div>
+          <h1 class="day-label reveal">Covenant Thursday</h1>
+          <p class="day-subtitle reveal">Thursday of the Covenant
+            <!-- REPLACE with Coptic liturgical name for Covenant Thursday used in your parish -->
+            <span class="day-subtitle-coptic">Pescha</span>
+          </p>
+        </div>
+
+        <div class="scroll reveal">
+          <div class="scroll-roll scroll-roll-top"></div>
+          <div class="scroll-body">
+
+            <p class="drop-cap">
+              Covenant Thursday commemorates the Last Supper: the institution of the
+              Eucharist, the washing of the disciples' feet, and the arrest of Christ in
+              Gethsemane. The service is one of the most theologically dense of the week,
+              holding the gift of the Eucharist and the beginning of the Passion in the
+              same liturgical space.
+            </p>
+
+            <hr class="gold-divider" />
+
+            <p class="scroll-heading">The Lakan: Washing of the Feet</p>
+
+            <p>
+              In many Coptic churches, the <em>Lakan</em> rite is observed on this night.
+              The bishop or senior priest re-enacts Christ's washing of the disciples' feet,
+              described in John 13. This ceremony is one of the more visually striking
+              moments of the Holy Week services and draws a large attendance.
+            </p>
+
+            <!-- REPLACE: add any specific Covenant Thursday hymns or readings used in your parish -->
+
+            <hr class="gold-divider" />
+
+            <p>
+              The readings of Covenant Thursday trace the full arc of the night: the
+              Passover meal prepared, the bread and cup given with the words <em>"Do this
+              in remembrance of me,"</em> the prediction of the betrayal, the prayer in
+              Gethsemane, and the arrest. By the close of the service the liturgical
+              week has fully entered its most sorrowful hours.
+            </p>
+
+            <p>
+              The fast continues. The stoles remain black. The congregation leaves knowing
+              that Good Friday begins before dawn.
+            </p>
+
+          </div>
+          <div class="scroll-roll scroll-roll-bottom"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3 — GOOD FRIDAY
+    ============================================================ -->
+    <section class="section" id="good-friday">
+      <div class="section-inner">
+
+        <div class="section-header">
+          <div class="ornament reveal">&#x2726; &nbsp; &#x2726; &nbsp; &#x2726;</div>
+          <h1 class="day-label reveal" style="color:#d64040;">Good Friday</h1>
+          <p class="day-subtitle reveal" style="color:rgba(214,64,64,0.65);">Friday of the Crucifixion
+            <!-- REPLACE with Coptic liturgical name for Good Friday used in your parish -->
+            <span class="day-subtitle-coptic" style="color:rgba(214,64,64,0.38);">Paraskevy</span>
+          </p>
+        </div>
+
+        <div class="scroll reveal">
+          <div class="scroll-roll scroll-roll-top"></div>
+          <div class="scroll-body">
+
+            <p class="drop-cap">
+              The Good Friday service is called the Pascha. It runs from approximately
+              8am to 5pm and is the longest single service of the liturgical year. The
+              faithful observe a strict fast throughout, abstaining from all food and water
+              from midnight until the service concludes. Attendance is expected for the
+              full duration.
+            </p>
+
+            <hr class="gold-divider" />
+
+            <p class="scroll-heading">The Agpeya Hours</p>
+
+            <p>
+              The structure of the Pascha follows the hours of the <em>Agpeya</em>, the
+              Coptic Book of Hours. Each canonical hour, Prime, Terce, Sext, None, Vespers,
+              and Compline, is tied to a specific moment in the Passion narrative. The
+              congregation moves through the full day of the Crucifixion in real time,
+              from the early morning trial to the burial at evening.
+            </p>
+
+            <hr class="gold-divider" />
+
+            <p class="scroll-heading">The Twelve Passion Gospel Readings</p>
+
+            <p>
+              Woven through the Agpeya hours are twelve consecutive Gospel readings covering
+              the complete Passion narrative, from Gethsemane to the sealing of the tomb.
+              Between readings the congregation responds with prostrations and the mournful
+              antiphons particular to this day. The service concludes at approximately 5pm.
+            </p>
+
+            <!-- REPLACE: add specific Agpeya hour references or Good Friday hymns used in your parish -->
+
+            <hr class="gold-divider" />
+
+            <!-- THOK TE TEGOM CALLOUT -->
+            <!-- REPLACE WITH ACCURATE THOK TE TEGOM TEXT -->
+            <div class="thok-box">
+              <p class="thok-title">Thok Te Tegom</p>
+              <p class="thok-subtitle">Good Friday Hymn &middot; Thine is the Power</p>
+
+              <div class="thok-columns">
+
+                <!-- Column 1: Coptic script -->
+                <div class="thok-col thok-col-coptic">
+                  <p class="thok-col-heading">Coptic</p>
+                  <p>Ⲑⲱⲕ ⲧⲉ ϯϫⲟⲙ ⲛⲉⲙ ⲡⲓⲱ̀ⲟⲩ ⲛⲉⲙ ⲡⲓⲥ̀ⲙⲟⲩ ⲛⲉⲙ ⲡⲓⲁ̀ⲙⲁϩⲓ ϣⲁ ⲉ̀ⲛⲉϩ ⲁ̀ⲙⲏⲛ: Ⲉⲙⲙⲁⲛⲟⲩⲏⲗ ⲡⲉⲛⲛⲟⲩϯ ⲡⲉⲛⲟⲩⲣⲟ.</p>
+                  <p>Ⲑⲱⲕ ⲧⲉ ϯϫⲟⲙ ⲛⲉⲙ ⲡⲓⲱ̀ⲟⲩ ⲛⲉⲙ ⲡⲓⲥ̀ⲙⲟⲩ ⲛⲉⲙ ⲡⲓⲁ̀ⲙⲁϩⲓ ϣⲁ ⲉ̀ⲛⲉϩ ⲁ̀ⲙⲏⲛ: Ⲡⲁⲟ̅ⲥ̅ Ⲓⲏ̅ⲥ̅ Ⲡⲭ̅ⲥ̅:</p>
+                  <p class="thok-note">From Tuesday 11th hour, add:</p>
+                  <p>ⲡⲁⲤⲱⲧⲏⲣ ⲛ̀ⲁ̀ⲅⲁⲑⲟⲥ:</p>
+                  <p class="thok-note">From Eve of Friday, add:</p>
+                  <p>ⲧⲁϫⲟⲙ ⲛⲉⲙ ⲡⲁⲥ̀ⲙⲟⲩ ⲡⲉ Ⲡⲟ̅ⲥ̅: ⲁϥϣⲱⲡⲓ ⲛⲏⲓ ⲉⲩⲥⲱⲧⲏⲣⲓⲁ̀ ⲉϥⲟⲩⲁⲃ.</p>
+                  <p>Ⲑⲱⲕ ⲧⲉ ϯϫⲟⲙ ⲛⲉⲙ ⲡⲓⲱ̀ⲟⲩ ⲛⲉⲙ ⲡⲓⲥ̀ⲙⲟⲩ ⲛⲉⲙ ⲡⲓⲁ̀ⲙⲁϩⲓ ϣⲁ ⲉ̀ⲛⲉϩ ⲁ̀ⲙⲏⲛ.</p>
+                </div>
+
+                <!-- Column 2: Transliteration -->
+                <div class="thok-col">
+                  <p class="thok-col-heading">Transliteration</p>
+                  <p>Thok te ti-gom, nem pi-o-oo nem pi-esmo, nem pi-amahee sha eneh amen, Emmano-eel pen-nouti pen-oroo.</p>
+                  <p>Thok te ti-gom, nem pi-o-oo nem pi-esmo, nem pi-amahee sha eneh amen, pa-Shois Esos Piekh-restos,</p>
+                  <p class="thok-note">From Tuesday 11th hour, add:</p>
+                  <p>Pasoteer en-aghathos,</p>
+                  <p class="thok-note">From Eve of Friday, add:</p>
+                  <p>Ta-gom, nem pa-esmo pi-epshois af-shobi nee, af-sotereia ef-owab.</p>
+                  <p>Thok te ti-gom, nem pi-o-oo nem pi-esmo, nem pi-amahee sha eneh amen.</p>
+                </div>
+
+                <!-- Column 3: English -->
+                <div class="thok-col">
+                  <p class="thok-col-heading">English</p>
+                  <p>Thine is the power, the glory, the blessing, and the majesty, forever Amen. Emmanuel our God and our King.</p>
+                  <p>Thine is the power, the glory, the blessing, and the majesty, forever Amen. O my Lord Jesus Christ,</p>
+                  <p class="thok-note">From Tuesday 11th hour, add:</p>
+                  <p>my good Savior.</p>
+                  <p class="thok-note">From Eve of Friday, add:</p>
+                  <p>The Lord is my strength, my praise, and has become my holy salvation.</p>
+                  <p>Thine is the power, the glory, the blessing, and the majesty, forever Amen.</p>
+                </div>
+
+              </div>
+            </div>
+
+            <p>
+              At approximately 5pm the Pascha concludes. The congregation departs and
+              returns home to rest. At 11pm Friday night, the church reconvenes for
+              Apocalypse Night, which is liturgically the beginning of Bright Saturday.
+            </p>
+
+          </div>
+          <div class="scroll-roll scroll-roll-bottom"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 4 — HOLY SATURDAY
+    ============================================================ -->
+    <section class="section" id="holy-saturday">
+      <div class="section-inner">
+
+        <div class="section-header">
+          <div class="ornament reveal">&#x2726; &nbsp; &#x2726; &nbsp; &#x2726;</div>
+          <h1 class="day-label reveal" style="color:#8898d8;">Bright Saturday</h1>
+          <p class="day-subtitle reveal" style="color:rgba(136,152,216,0.65);">The Great Sabbath
+            <!-- REPLACE with Coptic liturgical name for Bright Saturday used in your parish -->
+            <span class="day-subtitle-coptic" style="color:rgba(136,152,216,0.38);">Pi`evtou `nni`cparamouji</span>
+          </p>
+        </div>
+
+        <div class="scroll reveal">
+          <div class="scroll-roll scroll-roll-top"></div>
+          <div class="scroll-body">
+
+            <p class="drop-cap">
+              Bright Saturday consists of two separate services. The first, Apocalypse
+              Night, begins at 11pm on Good Friday and runs through the early hours of
+              Saturday morning. The second, the Saturday Night Liturgy, begins at 7pm
+              Saturday evening and concludes at midnight with the breaking of the
+              55-day Lenten fast.
+            </p>
+
+            <hr class="gold-divider" />
+
+            <p class="scroll-heading">Apocalypse Night &middot; Friday 11pm</p>
+
+            <p>
+              Apocalypse Night opens with the chanting of the entire Book of Revelation.
+              The congregation gathers at 11pm and remains for the complete reading, which
+              is followed by a full Divine Liturgy. The Apocalypse is read in this context
+              not as a warning but as an assurance: the victory of the Lamb is already
+              declared. The Church reads the end of the story while still sitting in the
+              silence of the tomb.
+            </p>
+
+            <hr class="gold-divider" />
+
+            <p class="scroll-heading">The Saturday Night Liturgy &middot; Saturday 7pm</p>
+
+            <p>
+              The congregation returns Saturday evening for the night liturgy, which begins
+              at 7pm. This is the final service of the 55-day Lenten season. The deacons
+              remain in black stoles. The altar curtain remains drawn. The mournful tunes
+              of Holy Week continue through the service.
+            </p>
+
+            <p>
+              At midnight the liturgy reaches its culmination. The Eucharist is offered
+              and the faithful receive communion, breaking the 55-day fast. This communion
+              is the formal end of the Great Lent. Immediately after the liturgy concludes,
+              the priest makes the announcement of the Resurrection.
+            </p>
+
+            <!-- REPLACE: add a specific Bright Saturday hymn or verse used in your parish -->
+            <p class="scripture-quote">
+              <em>"Watchman, what of the night? Watchman, what of the night?<br />
+              The morning comes, and also the night."</em>
+              <span class="scripture-source">Isaiah 21:11&ndash;12</span>
+            </p>
+
+          </div>
+          <div class="scroll-roll scroll-roll-bottom"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 5 — RESURRECTION SUNDAY
+    ============================================================ -->
+    <section class="section" id="resurrection-sunday">
+      <div class="section-inner">
+
+        <div class="section-header">
+          <div class="ornament reveal">&#x2726; &nbsp; &#x2726; &nbsp; &#x2726;</div>
+          <h1 class="day-label reveal" style="color:#f5d76e;text-shadow:0 0 40px rgba(245,215,110,0.5);">
+            Resurrection Sunday
+          </h1>
+          <p class="day-subtitle reveal" style="color:rgba(245,215,110,0.7);">The Feast of Feasts
+            <!-- REPLACE with Coptic liturgical name for Resurrection Sunday used in your parish -->
+            <span class="day-subtitle-coptic" style="color:rgba(245,215,110,0.42);">Tensae &middot; Pi`ehoou `nte `tanastasis</span>
+          </p>
+        </div>
+
+        <div class="scroll reveal">
+          <div class="scroll-roll scroll-roll-top"></div>
+          <div class="scroll-body">
+
+            <p class="drop-cap">
+              After the Saturday Night Liturgy concludes, the priest makes the
+              announcement: <em>Christos Anesti, Christ is Risen.</em> The congregation
+              responds: <em>Alithos Anesti, Truly He is Risen.</em> The 55-day fast has
+              been broken with communion. The mournful tunes of Holy Week do not return.
+              The festive melodies of the great feasts resume immediately and completely.
+            </p>
+
+            <!-- REPLACE: add the specific Coptic resurrection proclamation used in your parish -->
+
+            <div class="stole-moment stole-light">
+              <strong>The Stoles Return to Light</strong>
+              Following the announcement, the deacons remove their black stoles and vest
+              in white or gold. The stoles that were changed at the close of Palm Sunday
+              are now restored. The mourning of Holy Week is complete. The feast of the
+              Resurrection has begun.
+            </div>
+
+            <hr class="gold-divider" />
+
+            <p class="scroll-heading">Resurrection Sunday</p>
+
+            <p>
+              Resurrection Sunday is observed as a day of communal celebration. Many
+              Coptic churches organize gatherings at the church or at a local park, with
+              activities and events for children and adults. Families who spent the week
+              in fasting, prayer, and long services now spend the day together in rest
+              and joy. It is the deliberate other side of Holy Week: where the week was
+              marked by solemnity and discipline, the day is marked by food, fellowship,
+              and festivity.
+            </p>
+
+            <!-- REPLACE: add the specific Coptic Paschal hymn used in your parish -->
+            <p class="scripture-quote">
+              <em>"Death is swallowed up in victory.<br />
+              O death, where is your sting?<br />
+              O grave, where is your victory?"</em>
+              <span class="scripture-source">1 Corinthians 15:54&ndash;55</span>
+            </p>
+
+            <p>
+              The greeting <em>Christos Anesti</em> is exchanged throughout the fifty days
+              of the Resurrection season that follow, until Pentecost. Holy Week is complete.
+            </p>
+
+            <hr class="gold-divider" />
+
+            <!-- REPLACE: Coptic Easter greeting in Coptic script if desired -->
+            <p class="acclamation">Christos Anesti &middot; Alithos Anesti</p>
+
+          </div>
+          <div class="scroll-roll scroll-roll-bottom"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </div><!-- end .page-content -->
+
+  <script>
+    // ============================================================
+    // BACKGROUND COLOUR DATA PER SECTION
+    // glow arrays: [posX%, posY%, R, G, B, alpha, size%]
+    // ============================================================
+    const SECTION_COLORS = [
+      // 0 — Holy Week intro: deep warm sepia
+      {
+        baseTop:    [18,  10,  0],
+        baseBottom: [10,   6,  0],
+        glow1: [50, 40, 160, 110, 20, 0.28, 55],
+        glow2: [50, 70,  80,  50,  5, 0.18, 45],
+      },
+      // 1 — Palm Sunday: warm green and gold
+      {
+        baseTop:    [30,  58,  0],
+        baseBottom: [26,  20,  0],
+        glow1: [70, 20, 120, 160,  60, 0.35, 55],
+        glow2: [20, 80, 180, 140,  20, 0.40, 55],
+      },
+      // 2 — Covenant Thursday: warm amber fading to black
+      {
+        baseTop:    [46,  32,  0],
+        baseBottom: [ 0,   0,  0],
+        glow1: [50, 10, 180, 130,  10, 0.50, 55],
+        glow2: [50, 90,   0,   0,   0, 0.00, 10],
+      },
+      // 3 — Good Friday: deep black with crimson
+      {
+        baseTop:    [10,   0,  0],
+        baseBottom: [ 8,   0,  0],
+        glow1: [50, 40, 110,   0,   0, 0.42, 65],
+        glow2: [78, 78,  85,   0,   0, 0.30, 50],
+      },
+      // 4 — Bright Saturday: midnight navy
+      {
+        baseTop:    [ 0,   0, 26],
+        baseBottom: [ 0,   0,  8],
+        glow1: [30, 30,  20,  30,  85, 0.60, 55],
+        glow2: [70, 70,  10,  15,  65, 0.50, 50],
+      },
+      // 5 — Resurrection: dark to brilliant gold
+      {
+        baseTop:    [26,  15,  0],
+        baseBottom: [245, 215, 110],
+        glow1: [50, 50, 255, 220,  55, 0.32, 70],
+        glow2: [50, 65, 255, 200,  30, 0.22, 65],
+      },
+    ];
+
+    const SECTION_IDS = [
+      'holy-week', 'palm-sunday', 'covenant-thursday',
+      'good-friday', 'holy-saturday', 'resurrection-sunday'
+    ];
+
+    // ============================================================
+    // INTERPOLATION
+    // ============================================================
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function easeInOut(t) {
+      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    }
+
+    function interpColors(c1, c2, rawT) {
+      const t = easeInOut(Math.max(0, Math.min(1, rawT)));
+      const lArr = (a, b) => a.map((v, i) => lerp(v, b[i], t));
+      return {
+        baseTop:    lArr(c1.baseTop,    c2.baseTop),
+        baseBottom: lArr(c1.baseBottom, c2.baseBottom),
+        glow1:      lArr(c1.glow1,      c2.glow1),
+        glow2:      lArr(c1.glow2,      c2.glow2),
+      };
+    }
+
+    function buildGradient(c) {
+      function radial(g) {
+        const [x, y, r, gr, b, a, sz] = g;
+        return `radial-gradient(ellipse at ${x.toFixed(1)}% ${y.toFixed(1)}%, ` +
+               `rgba(${Math.round(r)},${Math.round(gr)},${Math.round(b)},` +
+               `${Math.max(0, Math.min(1, a)).toFixed(2)}) 0%, transparent ${sz.toFixed(1)}%)`;
+      }
+      const top = c.baseTop.map(Math.round);
+      const bot = c.baseBottom.map(Math.round);
+      return [radial(c.glow1), radial(c.glow2),
+              `linear-gradient(160deg, rgb(${top}) 0%, rgb(${bot}) 100%)`].join(', ');
+    }
+
+    // ============================================================
+    // KEYFRAMES — anchored to section positions in the document
+    // ============================================================
+    let keyframes = [];
+
+    function buildKeyframes() {
+      const totalH = document.body.scrollHeight - window.innerHeight;
+      if (totalH <= 0) return;
+      keyframes = SECTION_IDS.map((id, i) => {
+        const el  = document.getElementById(id);
+        const mid = el ? el.offsetTop + el.offsetHeight * 0.4 : 0;
+        return { frac: mid / totalH, colors: SECTION_COLORS[i] };
+      });
+      keyframes[0].frac = 0;
+      keyframes[keyframes.length - 1].frac = 1;
+    }
+
+    // ============================================================
+    // DOM REFERENCES
+    // ============================================================
+    const bgCanvas     = document.getElementById('bg-canvas');
+    const starsOverlay = document.getElementById('stars-overlay');
+    const progressBar  = document.getElementById('progressBar');
+    const navDots      = document.querySelectorAll('.nav-dot');
+    const sections     = document.querySelectorAll('.section');
+
+    // ============================================================
+    // UPDATE — called on every scroll tick
+    // ============================================================
+    function update() {
+      const totalH = document.body.scrollHeight - window.innerHeight;
+      if (totalH <= 0 || keyframes.length === 0) return;
+
+      const frac = Math.max(0, Math.min(1, window.scrollY / totalH));
+
+      // Background
+      let i = 0;
+      while (i < keyframes.length - 2 && keyframes[i + 1].frac <= frac) i++;
+      const k1   = keyframes[i];
+      const k2   = keyframes[i + 1];
+      const span = k2.frac - k1.frac;
+      const t    = span > 0.0001 ? (frac - k1.frac) / span : 0;
+      bgCanvas.style.background = buildGradient(interpColors(k1.colors, k2.colors, t));
+
+      // Stars: visible near Bright Saturday (index 4)
+      if (keyframes[4]) {
+        const dist = Math.abs(frac - keyframes[4].frac);
+        starsOverlay.style.opacity = Math.max(0, 1 - dist / 0.18).toFixed(3);
+      }
+
+      // Progress bar
+      progressBar.style.width = (frac * 100).toFixed(2) + '%';
+    }
+
+    // ============================================================
+    // NAV DOTS
+    // ============================================================
+    const sectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const idx = [...sections].indexOf(entry.target);
+          navDots.forEach((d, i) => d.classList.toggle('active', i === idx));
+        }
+      });
+    }, { threshold: 0.3 });
+
+    sections.forEach(s => sectionObserver.observe(s));
+
+    navDots.forEach(dot => {
+      dot.addEventListener('click', () => {
+        sections[+dot.dataset.section].scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    // ============================================================
+    // SCROLL REVEAL
+    // ============================================================
+    const revealEls = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.08 });
+    revealEls.forEach(el => revealObserver.observe(el));
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    function init() { buildKeyframes(); update(); }
+
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', init);
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(init);
+    } else {
+      window.addEventListener('load', init);
+    }
+    init();
+  </script>
+</body>
+</html>
